@@ -28,7 +28,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf().disable()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/players/create", "/api/players/getAll","/api/leaderboard/**","/api/players/getById/**","/api/auth/**","/api/authenticate","/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/api/players/create","/api/auth/**","/api/authenticate","/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html","/api/players/getById/**","/api/players/getAll","/api/leaderboard/**").permitAll()
                 .and()
                 .authorizeHttpRequests().requestMatchers("/api/**")
                 .authenticated().and()
@@ -38,8 +38,6 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
-
-
     }
 
     @Bean

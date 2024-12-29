@@ -1,4 +1,5 @@
 package com.example.player_leaderboard_management.service;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

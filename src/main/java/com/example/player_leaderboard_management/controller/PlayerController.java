@@ -2,9 +2,11 @@ package com.example.player_leaderboard_management.controller;
 
 import com.example.player_leaderboard_management.dto.AuthRequest;
 import com.example.player_leaderboard_management.entity.Player;
+import com.example.player_leaderboard_management.exception.ServiceException;
 import com.example.player_leaderboard_management.service.JwtService;
 import com.example.player_leaderboard_management.service.LeaderboardService;
 import com.example.player_leaderboard_management.service.PlayerService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,16 +38,24 @@ public class PlayerController {
 
     // Create a new player
     @PostMapping("/players/create")
-    public ResponseEntity<Player> createPlayer(@RequestBody Player player) {
-        Player savedPlayer = playerService.savePlayer(player);
-        return new ResponseEntity<>(savedPlayer, HttpStatus.CREATED);
+    public ResponseEntity<Player> createPlayer(@Valid @RequestBody Player player) {
+        try {
+            Player savedPlayer = playerService.savePlayer(player);
+            return new ResponseEntity<>(savedPlayer, HttpStatus.CREATED);
+        } catch (ServiceException e) {
+            throw new ServiceException("Failed to create player", e);
+        }
     }
 
     // Get player by ID
     @GetMapping("/players/getById/{id}")
     public ResponseEntity<Player> getPlayer(@PathVariable Long id) {
         Optional<Player> player = playerService.getPlayerById(id);
-        return player.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        if (player.isPresent()) {
+            return ResponseEntity.ok(player.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
     // Get all players
@@ -63,15 +73,19 @@ public class PlayerController {
             player.setId(id);
             return ResponseEntity.ok(playerService.savePlayer(player));
         }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     // Delete player
     @DeleteMapping("/players/delete/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> deletePlayer(@PathVariable Long id) {
-        playerService.deletePlayer(id);
-        return ResponseEntity.noContent().build();
+        try {
+            playerService.deletePlayer(id);
+            return ResponseEntity.noContent().build();
+        } catch (ServiceException e) {
+            throw new ServiceException("Failed to delete player with ID " + id, e);
+        }
     }
 
     // Get top N players by score
@@ -86,16 +100,18 @@ public class PlayerController {
         return leaderboardService.getLeaderboard();
     }
 
-    //login endpoint
+    // Login endpoint
     @PostMapping("/authenticate")
-    public String authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
-        if (authentication.isAuthenticated()) {
-            return jwtService.generateToken(authRequest.getUsername());
-        } else {
-            throw new UsernameNotFoundException("invalid user request !");
+    public String authenticateAndGetToken(@Valid @RequestBody AuthRequest authRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
+            if (authentication.isAuthenticated()) {
+                return jwtService.generateToken(authRequest.getUsername());
+            } else {
+                throw new UsernameNotFoundException("Invalid user request!");
+            }
+        } catch (UsernameNotFoundException e) {
+            throw new UsernameNotFoundException("Invalid user request!", e);
         }
-
-
     }
 }

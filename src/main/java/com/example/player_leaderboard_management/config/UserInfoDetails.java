@@ -1,6 +1,5 @@
 package com.example.player_leaderboard_management.config;
 
-
 import com.example.player_leaderboard_management.entity.Player;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
